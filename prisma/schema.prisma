@@ -1,0 +1,32 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Category {
+  Exam
+  Event
+  General
+}
+
+enum Priority {
+  Normal
+  Urgent
+}
+
+model Notice {
+  id          String   @id @default(cuid())
+  title       String
+  body        String
+  category    String // "Exam" | "Event" | "General"
+  priority    String   @default("normal") // "normal" | "urgent"
+  publishDate DateTime
+  imageUrl    String? // Optional — stores a URL/path to the uploaded image
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
