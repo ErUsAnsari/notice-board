@@ -7,6 +7,18 @@ datasource db {
   provider = "postgresql"
 }
 
+model Notice {
+  id          String   @id @default(cuid())
+  title       String
+  body        String
+  category    String
+  priority    String   @default("normal")
+  publishDate DateTime
+  imageUrl    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
 enum Category {
   Exam
   Event
@@ -16,17 +28,4 @@ enum Category {
 enum Priority {
   Normal
   Urgent
-}
-
-model Notice {
-  id          String   @id @default(cuid())
-  title       String
-  body        String
-  category    String // "Exam" | "Event" | "General"
-  priority    String   @default("normal") // "normal" | "urgent"
-  publishDate DateTime
-  imageUrl    String? // Optional — stores a URL/path to the uploaded image
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 }
