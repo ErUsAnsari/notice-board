@@ -11,12 +11,13 @@ model Notice {
   id          String   @id @default(cuid())
   title       String
   body        String
-  category    String
-  priority    String   @default("normal")
+  category    Category
+  priority    Priority @default(Normal)
   publishDate DateTime
   imageUrl    String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 enum Category {
