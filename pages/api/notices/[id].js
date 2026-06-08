@@ -1,8 +1,7 @@
 import { prisma } from "@/lib/prisma";
+import { validateNotice } from "@/lib/validate";
 
 export default async function handler(req, res) {
-    console.log("cmq0iv24a00010wu8w1ookq2l");
-    console.log(req.query);
     const { id } = req.query;
 
     if (typeof id !== "string") {
@@ -23,16 +22,20 @@ export default async function handler(req, res) {
     if (req.method === "PUT") {
         const { title, body, category, priority, imageUrl, publishDate } = req.body;
 
-        if (!title?.trim() || !body?.trim() || !category) {
-            return res
-                .status(400)
-                .json({ error: "Title, body and category are required" });
+        const errors = validateNotice({ title, body, category, priority, publishDate });
+        if (Object.keys(errors).length > 0) {
+            return res.status(400).json({ errors });
         }
 
         try {
+
+            // Checking whether the record actually exists before trying to update
+            const existing = await prisma.notice.findUnique({ where: { id } });
+            if (!existing) return res.status(404).json({ error: "Notice not found." });
+
             const notice = await prisma.notice.update({
                 where: { id },
-                data: { title, body, category, priority, publishDate: new Date(publishDate), imageUrl },
+                data: { title: title.trim(), body: body.trim(), category, priority, publishDate: new Date(publishDate), imageUrl: imageUrl?.trim() || null },
             });
             return res.status(200).json(notice);
         } catch (error) {
@@ -43,6 +46,10 @@ export default async function handler(req, res) {
 
     if (req.method === "DELETE") {
         try {
+
+            const existing = await prisma.notice.findUnique({ where: { id } });
+            if (!existing) return res.status(404).json({ error: "Notice not found." });
+
             await prisma.notice.delete({ where: { id } });
             return res.status(200).json({ message: "Notice deleted successfully" });
         } catch (error) {

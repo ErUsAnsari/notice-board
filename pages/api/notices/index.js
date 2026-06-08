@@ -1,16 +1,13 @@
 import { prisma } from "@/lib/prisma";
+import { validateNotice } from "@/lib/validate";
 
 export default async function handler(req, res) {
     if (req.method === "GET") {
         try {
             const notices = await prisma.notice.findMany({
                 orderBy: [
-                    {
-                        priority: "desc",
-                    },
-                    {
-                        publishDate: "desc"
-                    }
+                    { priority: "desc" },    // Urgent before Normal
+                    { publishDate: "desc" }  // newest first within each priority
                 ],
             });
             return res.status(200).json(notices);
@@ -23,24 +20,14 @@ export default async function handler(req, res) {
     if (req.method === "POST") {
         const { title, body, category, priority, publishDate, imageUrl } = req.body;
 
-        if (!title?.trim() || !body?.trim() || !category) {
-            return res
-                .status(400)
-                .json({ error: "Title, body and category are required" });
+        const errors = validateNotice({ title, body, category, priority, publishDate });
+        if (Object.keys(errors).length > 0) {
+            return res.status(400).json({ errors });
         }
-
-        if (!publishDate || isNaN(new Date(publishDate).getTime())) {
-            return res.status(400).json({
-                error: "Valid publish date is required"
-            });
-        }
-
-        console.log(req.body);
-        console.log("publishDate:", publishDate);
 
         try {
             const notice = await prisma.notice.create({
-                data: { title, body, category, priority, publishDate: new Date(publishDate), imageUrl },
+                data: { title: title.trim(), body: body.trim(), category, priority, publishDate: new Date(publishDate), imageUrl: imageUrl?.trim() || null },
             });
             return res.status(201).json(notice);
         } catch (error) {
